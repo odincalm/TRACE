@@ -1,10 +1,29 @@
-# TRACE Phase 1 outcomes
+# TRACE delivery outcomes
 
-- **Preserve and configure the generated mobile foundation:** Keep the fixed Expo Router / React Native / TypeScript starter, generated app identifiers, safe-area providers, query/runtime wiring and native build configuration intact; register TypeScript diagnostics and document the actual toolchain.
-- **Deliver the TRACE visual system and five-destination shell:** Implement the premium OLED-black/graphite surfaces, restrained silver typography, sea-glass accent, accessible touch targets, visible text alternatives, reduced-motion-safe transitions and bottom navigation for Home, Timeline, Capture, Collections and Settings.
-- **Deliver the fresh-launch welcome/support prompt:** Show TRACE name/description, the supplied developer profile asset state, Built by Nitin Kumar, nursing-student explanation, Support My Studies & Development CTA, Continue to TRACE CTA and Don't show again control; persist the preference locally and do not re-show on browser return, rotation, settings navigation or app return.
-- **Deliver Settings and Support the Developer:** Provide a Settings shell and a Support page with developer introduction, why-support explanation, support website, Instagram, LinkedIn, email and GitHub rows, developer credit and © 2026 Nitin Kumar.
-- **Deliver safe donation information:** Show UPI ID `bholanitin308@okicici`, the supplied UPI QR asset state, Wise link `https://wise.com/pay/business/nitinkumar34?utm_source=quick_pay`, the supplied Wise QR asset state and the exact guidance that international donations should be more than US$5 and less than US$10,000, with provider restrictions/refund-process wording and no fake success or verification.
-- **Deliver local asset validation:** Keep profile and payment assets local in the final experience, never synthesize or substitute a real-person/payment asset, label missing/unverified assets clearly during development and make the release validation command fail while any required asset remains a placeholder.
-- **Deliver Phase 1 data/preferences foundation:** Add a local preference repository boundary and a Room/SQLite foundation boundary that can support later MVVM/repository work without claiming that the later memory engine, FTS5, tasks, reminders, attachments, backup/restore or security features are complete.
-- **Validate and document honestly:** Run and record `pnpm db:push`, TypeScript check, lint, tests, Metro/API readiness and asset-gate validation; document changed files, exact results, limitations, later phases and GitHub handoff details in README.md; do not mark the app production-ready.
+## Phase 1 — complete
+
+- Preserve the generated Expo Router / React Native / TypeScript mobile foundation, safe-area providers, query/runtime wiring and native build configuration.
+- Deliver the OLED-black/graphite TRACE visual system, accessible touch targets and five destinations: Home, Timeline, Capture, Collections and Settings.
+- Deliver the fresh-launch welcome/support prompt with local `Don't show again` preference and the supplied support/social/payment text.
+- Keep profile, UPI QR and Wise QR visibly marked as placeholders and make `pnpm validate:assets` fail while any required asset remains unverified.
+
+## Phase 2 — implemented
+
+- **Versioned local data model:** Use `expo-sqlite` for the actual native Expo runtime; create versioned migrations for memories, tags, collections and relationships, with foreign keys and indexes; create FTS5 when supported; use a documented AsyncStorage local fallback for web preview; do not claim Room.
+- **Reliable memory CRUD:** Create, edit, save, pin, archive, soft-delete and restore memories with persistent local state; retain identity and creation time on edits; keep native memory/tag/FTS updates transaction-safe.
+- **Timeline browsing:** Display persisted memories chronologically, prioritize pinned items, provide local title/body/tag search, pinned filtering, Trash mode and page-based load-more behavior.
+- **Collections/projects:** Create collections locally, select a collection during capture, filter the Collections destination by selected project and display its saved memories.
+- **Search and recovery safeguards:** Use native FTS5 where available, parameterized fallback search otherwise, normalize/deduplicate tags, prevent duplicate collection/relationship inserts, prevent self-relationships and provide undo from Trash.
+- **Phase 2 tests:** Verify migration versioning, serialized persistence round trips, editing/upsert behavior, search over title/body/tags, pagination filtering, duplicate prevention, soft-delete and restore semantics; keep the existing starter tests passing.
+
+## Phase 2 — remaining before release
+
+- Verify native SQLite migrations, FTS5 indexing and persistence across app restarts on Expo Go/physical devices.
+- Add a full relationship editor and later attachment/reminder/backup/security flows without fake persistence.
+- Verify and bundle the exact developer photo, UPI QR and Wise QR locally; keep the release gate failing until verified.
+- Complete accessibility, low-end-device, privacy/legal, debug/release-build and native permission QA.
+- Update README and GitHub handoff after the Phase 2 commit; do not call TRACE production-ready.
+
+## Boundaries
+
+No AI, mandatory login, cloud backend, ads or analytics. Preserve the five existing destinations and all Phase 1 work. Do not overwrite unrelated Git history or force-push.

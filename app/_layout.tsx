@@ -11,6 +11,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { TRACE_COLORS, DEVELOPER } from "@/constants/trace";
 import { useWelcomePreference } from "@/hooks/use-welcome-preference";
+import { MemoryProvider } from "@/hooks/use-memory-store";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { ThemeProvider } from "@/lib/theme-provider";
@@ -89,6 +90,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="support" />
           <Stack.Screen name="about" />
+          <Stack.Screen name="memory/[id]" />
           <Stack.Screen name="oauth/callback" />
         </Stack>
         <WelcomeGate />
@@ -97,9 +99,9 @@ export default function RootLayout() {
     </trpc.Provider>
   </GestureHandlerRootView>;
 
-  return <ThemeProvider><SafeAreaProvider initialMetrics={providerInitialMetrics}>
+  return <ThemeProvider><SafeAreaProvider initialMetrics={providerInitialMetrics}><MemoryProvider>
     {Platform.OS === "web" ? <SafeAreaFrameContext.Provider value={frame}><SafeAreaInsetsContext.Provider value={insets}>{content}</SafeAreaInsetsContext.Provider></SafeAreaFrameContext.Provider> : content}
-  </SafeAreaProvider></ThemeProvider>;
+  </MemoryProvider></SafeAreaProvider></ThemeProvider>;
 }
 
 const styles = StyleSheet.create({

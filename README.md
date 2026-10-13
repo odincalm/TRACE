@@ -1,24 +1,48 @@
 # TRACE
 
-TRACE is a private, offline-first personal memory workspace by Nitin Kumar. Phase 1 establishes the mobile shell, welcome/support flow, local preference boundary, support destinations and honest payment-asset validation. It is **not production-ready** and does not yet include the full memory engine.
+TRACE is a private, offline-first personal memory workspace by Nitin Kumar. The current checkpoint ships the Phase 1 shell and Phase 2 local memory engine. It is **not production-ready** because the real profile/QR assets remain unverified and native device/release QA is still outstanding.
 
 > Built by Nitin Kumar · © 2026 Nitin Kumar
 
-## What is implemented in Phase 1
+## Phase 2 shipped functionality
 
-The project uses the fixed Manus Webdev Mobile starter: Expo Router, React Native, TypeScript, NativeWind-compatible components, the existing safe-area/query/runtime wiring and the existing server/database starter infrastructure.
+### Local data model and migrations
 
-The app now includes five bottom-navigation destinations:
+- Native iOS/Android runtime: `expo-sqlite` (`~57.0.4`) with a versioned `PRAGMA user_version` migration path.
+- Migration 1 creates `memories`, `collections`, `tags`, `memory_tags` and `relationships` plus foreign keys and indexes.
+- Migration 2 adds kind and pinned indexes.
+- A native `memories_fts` FTS5 virtual table is created when the selected SQLite runtime supports FTS5. The repository falls back to parameterized title/body matching if FTS5 is unavailable.
+- The app does **not** claim that Room is implemented. Room is Android-specific; this Expo project uses `expo-sqlite` on native and a real AsyncStorage-backed local state database for the web preview.
 
-- **Home:** local-first status, recent-memory empty state and first-capture entry point.
-- **Timeline:** chronological empty state prepared for future filters and date browsing.
-- **Capture:** Note, Event, Task, Decision, Voice and Attachment entry types, clearly marked as later-phase persistence.
-- **Collections:** empty state for projects, tags and starter templates.
-- **Settings:** grouped shell for support, notifications, privacy/security, backup/restore, storage, help and About.
+### Memories
 
-The fresh-launch welcome prompt contains TRACE branding, the developer credit, a nursing-student explanation, support and continue actions, and a `Don't show again` preference persisted locally with AsyncStorage. Dismissing the prompt for the current session does not enable the persistent preference. The prompt is not tied to browser return, rotation or navigation state.
+- Capture creates and persists Note, Event, Task, Decision, Voice and Attachment records.
+- Edit screens update title/body and preserve the existing identity, tags, collection, flags and creation time.
+- Memories can be pinned, archived, moved to Trash and restored from Trash.
+- Native writes for memory fields, tags and FTS indexing occur in a SQLite transaction.
+- Web preview writes serialize a versioned local state document through AsyncStorage; it is not a cloud or fake in-memory-only implementation.
 
-The Support the Developer page contains:
+### Timeline, search and pagination
+
+- Timeline reads saved memories chronologically, prioritizing pinned items.
+- Search covers title, body and tags locally. Native uses FTS5 where available; the web fallback uses local matching over the same persisted state.
+- Pinned-only filtering, Trash mode and a load-more pagination control are available.
+- Deleted memories are excluded from the normal timeline and remain recoverable through Trash.
+
+### Collections and relationships
+
+- Collections/projects can be created locally and selected during capture.
+- Collection filtering is available from the Collections destination.
+- Tags are normalized, deduplicated and stored relationally.
+- Relationships have a relational table, self-link prevention and duplicate prevention at the repository boundary; a full relationship editor remains a later enhancement.
+
+## Phase 1 shell and support flow
+
+The app keeps five bottom-navigation destinations: **Home, Timeline, Capture, Collections and Settings**. It retains the premium OLED-black/graphite visual system, sea-glass accent, accessible touch targets, local welcome preference and Support the Developer page.
+
+The welcome prompt contains TRACE branding, the developer credit, nursing-student explanation, support and continue actions, and a persistent local `Don't show again` preference. It is not tied to browser return, rotation or navigation state.
+
+Support destinations remain:
 
 - Support website: <https://portfolio-blush-three-98.vercel.app/>
 - Instagram: <https://instagram.com/odincalm0>
@@ -27,37 +51,34 @@ The Support the Developer page contains:
 - GitHub: <https://github.com/odincalm>
 - UPI ID: `bholanitin308@okicici`
 - Wise payment link: <https://wise.com/pay/business/nitinkumar34?utm_source=quick_pay>
-- The exact international donation guidance supplied in the brief.
 
 External links open through the platform linking API. TRACE does not verify donations, claim payment success, promise automatic refunds or enforce third-party limits.
 
 ## Asset safety and release blocker
 
-The supplied payment links are stored as constants. The UPI and Wise image pages exposed these direct image URLs during inspection:
-
-- Wise page: <https://ibb.co/KjvVW0s0>
-- Wise image: <https://i.ibb.co/7JmrKYpY/wise.jpg>
-- UPI page: <https://ibb.co/NfkLqCm>
-- UPI image: <https://i.ibb.co/VbhvG9Q/qr.jpg>
-- Profile page: <https://ibb.co/zTL9Q4Gf>
-
-The real profile photo page did not expose a reliable direct image URL during this run. More importantly, the required assets must be verified and bundled locally, not loaded from the network. Therefore these files remain deliberately unbundled and the UI shows **Asset pending verification** instead of a fake photo or QR code:
+The required real assets must be verified and bundled locally, not loaded from a network. These remain deliberately unbundled and the UI shows **Asset pending verification** instead of a fake photo or QR code:
 
 - `assets/images/developer-profile.jpg`
 - `assets/images/upi-qr.jpg`
 - `assets/images/wise-qr.jpg`
 
-Do not generate, redraw, or replace these with stock imagery. After the exact files are supplied and verified against the intended sources and UPI ID, update the asset manifest status and add the files locally. The release gate must remain failing until then:
+The inspected source pages are:
+
+- Wise QR page: <https://ibb.co/KjvVW0s0>
+- UPI QR page: <https://ibb.co/NfkLqCm>
+- Profile page: <https://ibb.co/zTL9Q4Gf>
+
+Run the release gate:
 
 ```bash
 pnpm validate:assets
 ```
 
-Expected Phase 1 result while placeholders remain: exit code `1` and a JSON report listing all three missing assets.
+Expected current result: exit code `1` with all three assets listed as `placeholder`. Do not generate, redraw, substitute or claim verification for these files.
 
 ## Local development
 
-Requirements: Node.js, pnpm 9, and the dependencies installed by the managed Mobile starter.
+Requirements: Node.js, pnpm 9 and the dependencies installed by the managed Mobile starter.
 
 ```bash
 pnpm install --prefer-offline
@@ -70,11 +91,9 @@ The managed Mobile runtime uses:
 - Metro/Web preview: `http://localhost:8081`
 - API server: `http://localhost:3000`
 
-The starter also supports `pnpm dev:metro` and `pnpm dev:server` when only one listener needs to be restored. Do not change the configured ports. For a native device, use the Expo Go connection flow provided by the managed project; a web preview does not verify every native-only behavior.
+The web preview uses the AsyncStorage repository fallback because native SQLite is not guaranteed in a browser. Expo Go/native builds use `expo-sqlite`. `expo-sqlite` is registered in `app.config.ts` through the `expo-sqlite` plugin.
 
-## Validation commands
-
-Run the following from the project root:
+## Validation commands and current results
 
 ```bash
 pnpm db:push
@@ -84,42 +103,49 @@ pnpm test
 pnpm validate:assets
 ```
 
-`pnpm db:push` synchronizes the starter schema before first API traffic. `pnpm check` runs TypeScript without emitting files. `pnpm lint` runs Expo ESLint. `pnpm test` runs the existing Vitest suite. `pnpm validate:assets` is intentionally a release blocker until all required local assets are verified.
+Current results for this checkpoint:
 
-For readiness, start `pnpm dev` in a resident terminal and verify both ports:
+- `pnpm db:push`: passed; starter server schema has no changes.
+- `pnpm check`: passed.
+- `pnpm lint`: passed; pnpm/module-type warnings remain non-blocking.
+- `pnpm test`: passed: 31 tests, 1 pre-existing auth test skipped.
+- `pnpm validate:assets`: intentionally fails because the three required real assets are still placeholders.
+
+The tests cover migration versioning, serialization round trips, editing/upsert behavior, local search over title/body/tags, pagination filtering, duplicate collection/relationship prevention, soft-delete and restore semantics. A plain Node smoke import cannot exercise React Native modules, so native SQLite itself still requires device/runtime validation.
+
+For readiness, start `pnpm dev` in a resident terminal and verify:
 
 ```bash
-curl -I http://127.0.0.1:8081
-curl -I http://127.0.0.1:3000
+curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8081/
+curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 ```
 
 ## Privacy and product boundaries
 
-Phase 1 adds no AI SDK, model, analytics, advertising, mandatory login, cloud sync or payment backend. It does not request a broad storage permission and does not need an Internet permission just to open an external browser link. The app does not claim database encryption because encryption is not implemented. Private note content is not logged by the Phase 1 UI.
+Phase 2 adds no AI SDK, model, analytics, advertising, mandatory login, cloud sync or payment backend. Private memory content is stored locally by the selected runtime and is not sent to the server. The app does not claim database encryption, app lock, secure deletion or encrypted archives because those features are not implemented. It does not request a broad storage permission and does not need an Internet permission merely to open an external browser link.
 
-The full privacy policy, terms, third-party notices, changelog and permission explanations must be kept aligned with the behavior actually shipped in later phases.
-
-## Architecture foundation
+## Architecture
 
 - `app/` contains Expo Router screens and navigation.
-- `components/trace/` contains reusable visual primitives and asset-status UI.
-- `constants/trace.ts` centralizes brand, developer, payment and required-asset declarations.
-- `lib/preferences.ts` and `hooks/use-welcome-preference.ts` isolate the local welcome preference.
+- `components/trace/` contains reusable visual primitives and memory cards.
+- `constants/trace.ts` centralizes brand, developer, payment and asset declarations.
+- `lib/memory-model.ts` defines memory, tag, collection and relationship types.
+- `lib/sqlite-migrations.ts` owns versioned native SQLite migrations and FTS5 setup.
+- `lib/memory-repository.ts` owns native SQLite persistence and the web-local AsyncStorage fallback.
+- `lib/memory-state.ts` contains deterministic serialized-state transitions used by the fallback and tests.
+- `hooks/use-memory-store.tsx` provides app-level loading, refresh and mutation behavior.
+- `lib/preferences.ts` and `hooks/use-welcome-preference.ts` isolate the Phase 1 welcome preference.
 - `lib/asset-validation.ts` and `scripts/validate-assets.ts` implement the release blocker.
-- `lib/local-data-foundation.ts` defines the future local repository boundary without pretending the memory engine exists.
-- The later memory phase must add a tested SQLite/Room-compatible data layer, migrations, transactions, FTS5 indexing, duplicate safeguards and recoverable deletion behavior.
 
-## Known limitations and next phases
+## Remaining limitations
 
-Phase 1 does not ship memory creation/editing, timeline persistence, collections CRUD, tags, FTS5 search, relationships, tasks, reminders, audio/media/document attachments, backup/restore, encrypted archives, app lock, notification privacy, storage cleanup, complete legal pages, native release artifacts or verified profile/QR assets.
+Not shipped in Phase 2: full relationship editing UI, reminders/notifications, audio/media/document attachment capture, backup/restore, encrypted exports, app lock, secure deletion, storage cleanup, complete legal pages, complete accessibility audit, native release artifacts and verified profile/QR assets.
 
-The implementation intentionally uses the fixed Expo/React Native mobile stack required by Webdev Mobile. It does not rewrite the project as Kotlin/Jetpack Compose. Native-only features such as notifications, photo picker, microphone capture and device credential flows require later implementation and actual device validation.
-
-Do not describe this checkpoint as production-ready until the later release gates pass, including verified local assets, clean debug/release builds, migration/UI tests, accessibility checks, low-end-device testing and complete privacy/legal review.
+The repository uses the fixed Expo/React Native Mobile stack and does not rewrite the project as Kotlin/Jetpack Compose. Do not describe TRACE as production-ready until real assets, migrations on physical devices, native FTS5 behavior, release builds, low-end-device testing, accessibility QA and privacy/legal review pass.
 
 ## GitHub handoff
 
-The requested destination is <https://github.com/odincalm/TRACE>. The repository was empty when inspected. Mobile projects keep the managed project repository as canonical; this repository handoff is a separate user-requested code copy and does not change that platform constraint. No force push or unrelated-history overwrite is allowed.
+The requested code destination is <https://github.com/odincalm/TRACE>. The Phase 1 code was previously pushed to `main`; Phase 2 changes should be pushed as a new normal commit without force-pushing or overwriting unrelated history.
 
 ## License / credit
 
